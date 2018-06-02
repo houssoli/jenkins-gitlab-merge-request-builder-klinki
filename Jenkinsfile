@@ -7,6 +7,7 @@ pipeline {
         skipStagesAfterUnstable()
         // Here add name of your saved gitlab configuration with API key
         gitLabConnection('gitlab')
+
     }
     triggers {
         gitlab(
@@ -58,23 +59,57 @@ pipeline {
     }
     post {
         always {
+            // Run the steps in the post section regardless of the completion status of the Pipeline’s or stage’s run.
             echo 'ALWAYS....'
+
             junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml,**/target/failsafe-reports/*.xml'
             deleteDir() /* clean up our workspace */
         }
+        changed {
+            // Only run the steps in post if the current Pipeline’s or stage’s run has a different completion status from its previous run.
+            echo 'CHANGED....'
+
+        }
         success {
-            // Gitlab notification could go also here (if you don't need to distinguish between build and test phase)
+            // Only run the steps in post if the current Pipeline’s or stage’s run has a "success" status, typically denoted by blue or green in the web UI.
             echo 'SUCCESS....'
-            // updateGitlabCommitStatus state: 'success'
+
+            // Gitlab notification could go also here (if you don't need to distinguish between build and test phase)
+            updateGitlabCommitStatus state: 'success'
+        }
+        fixed {
+            // Only run the steps in post if the current Pipeline’s or stage’s run is successful and the previous run failed or was unstable.
+            echo 'FIXED....'
+
         }
         failure {
-            // Gitlab notification could go also here (if you don't need to distinguish between build and test phase)
+            // Only run the steps in post if the current Pipeline’s or stage’s run has a "failed" status, typically denoted by red in the web UI.
             echo 'FAILURE....'
-            // updateGitlabCommitStatus state: 'failed'
+
+            // Gitlab notification could go also here (if you don't need to distinguish between build and test phase)
+            updateGitlabCommitStatus state: 'failed'
+        }
+        unstable {
+            // Only run the steps in post if the current Pipeline’s or stage’s run has an "unstable" status, usually caused by test failures, code violations, etc. This is typically denoted by yellow in the web UI.
+            echo 'UNSTABLE....'
+
         }
         aborted {
+            // Only run the steps in post if the current Pipeline’s or stage’s run has an "aborted" status, usually due to the Pipeline being manually aborted. This is typically denoted by gray in the web UI.
             echo 'ABORTED....'
-            // updateGitlabCommitStatus state: 'canceled'
+
+            // Gitlab notification could go also here (if you don't need to distinguish between build and test phase)
+            updateGitlabCommitStatus state: 'canceled'
+        }
+        regression {
+            // Only run the steps in post if the current Pipeline’s or stage’s run’s status is failure, unstable, or aborted and the previous run was successful.
+            echo 'REGRESSION....'
+
+        }
+        cleanup {
+            echo 'CLEANUP....'
+            // Run the steps in this post condition after every other post condition has been evaluated, regardless of the Pipeline or stage’s status.
+
         }
     }
 }
