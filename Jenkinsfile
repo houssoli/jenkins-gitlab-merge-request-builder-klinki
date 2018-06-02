@@ -8,6 +8,25 @@ pipeline {
         // Here add name of your saved gitlab configuration with API key
         gitLabConnection('gitlab')
     }
+    triggers {
+        gitlab(
+                triggerOnPush: true,
+                triggerOnMergeRequest: true,
+                triggerOpenMergeRequestOnPush: "never",
+                triggerOnNoteRequest: true,
+                noteRegex: "Jenkins please retry a build",
+                skipWorkInProgressMergeRequest: false,
+                ciSkip: false,
+                setBuildDescription: false,
+                addNoteOnMergeRequest: false,
+                addCiMessage: false,
+                addVoteOnMergeRequest: false,
+                acceptMergeRequestOnSuccess: false,
+                branchFilterType: "NameBasedFilter",
+                includeBranchesSpec: "${BRANCH_NAME}",
+                secretToken: "abf102fa7f081d4b9727a8c52b88c2ce"
+        )
+    }
     stages {
         stage('Build') {
             steps {
